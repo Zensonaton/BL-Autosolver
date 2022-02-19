@@ -170,7 +170,7 @@ var last_module_id: string
 
 if (DEBUG) { console.clear() } // Не пойму почему настройка для очистки консоли не работала, поэтому будем так извращаться :D
 
-console.log("Zensonaton'ский модуль для хитрожопой работы с билимлендом загружен!")
+console.log("Zensonaton'ский модуль для хитрожопой работы с билимлендом загружен, ура!")
 
 waitForElementToAppear(
 	"/html/body/div/div[2]/div/div[2]/div[2]/div[1]/span",
