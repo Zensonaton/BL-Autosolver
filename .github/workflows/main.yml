@@ -3,7 +3,7 @@ on: push
 
 jobs:
   build:
-    name: Build Tampermonkey script
+    name: Build and release Tampermonkey script
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -12,12 +12,6 @@ jobs:
     - run: python scripts/build-tm.py
     - run: echo "CUR_VER=$(python scripts/retrieve-version.py)" >> $GITHUB_ENV
     - run: echo Current version is "${{ env.CUR_VER }}".
-  
-  release:
-    name: Create Github release
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
 
     - name: Create new git tag
       uses: tvdias/github-tagger@v0.0.1
@@ -41,7 +35,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./out-tm/main.js
-        asset_name: Bilimland autosolver v${{ steps.check.outputs.version }}.js
+        asset_name: Bilimland autosolver v${{ env.CUR_VER }}.js
         asset_content_type: text/javascript
 
 
