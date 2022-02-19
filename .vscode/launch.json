@@ -1,0 +1,26 @@
+{
+	"configurations": [
+		{
+			"name": "Python: Current File",
+			"type": "python",
+			"request": "launch",
+			"program": "${file}",
+			"console": "integratedTerminal"
+		},
+		{
+			"type": "firefox",
+			"request": "launch",
+			"reAttach": true,
+			"name": "Launch firefox browser",
+			"url": "https://onlinemektep.net/schedule/17.02.2022/lesson/274b079c-49cd-408a-8b7e-42c8aac83425",
+			"preLaunchTask": "run python hoster",
+			"profile": "bilimland-tampermonkey-testing",
+			"keepProfileChanges": true,
+			"reloadOnChange": {
+				"watch": "${workspaceFolder}/out/*.js",
+				"ignore": "**/node_modules/**"
+			},
+			"clearConsoleOnReload": true
+		}
+	]
+}

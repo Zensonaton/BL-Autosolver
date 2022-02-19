@@ -1,0 +1,53 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "typescript",
+			"tsconfig": "tsconfig.json",
+			"option": "watch",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build",
+			"label": "tsc: watch - tsconfig.json",
+			"isBackground": true
+		},
+		{
+			"type": "shell",
+			"label": "run python hoster",
+			"command": [
+				"python3",
+				"hoster.py"
+			],
+			"isBackground": true,
+			"group": "build",
+			"dependsOn": "tsc: watch - tsconfig.json",
+			"problemMatcher": [
+				{
+					"pattern": [
+						{
+							"regexp": ".",
+							"file": 1,
+							"location": 2,
+							"message": 3
+						}
+					],
+					"background": {
+						"activeOnStart": true,
+						"beginsPattern": "\\*",
+						"endsPattern": "\\(Press CTRL\\+C to quit\\)",
+					}
+				}
+			]
+		},
+		{
+			"type": "shell",
+			"label": "build tampermonkey script",
+			"command": [
+				"python3",
+				"scripts/build-tm.py"
+			],
+			"group": "build"
+		}
+	]
+}

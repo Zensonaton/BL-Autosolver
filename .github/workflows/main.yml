@@ -1,0 +1,47 @@
+name: Build, release
+on: push
+
+jobs:
+  build:
+    name: Build Tampermonkey script
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+    - run: npm install -g typescript
+    - run: python scripts/build-tm.py
+    - run: echo "CUR_VER=$(python scripts/retrieve-version.py)" >> $GITHUB_ENV
+    - run: echo Current version is "${{ env.CUR_VER }}".
+  
+  release:
+    name: Create Github release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Create new git tag
+      uses: tvdias/github-tagger@v0.0.1
+      with:
+        repo-token: ${{ secrets.GTOKEN || github.token }}
+        tag: v${{ env.CUR_VER }}
+
+    - name: Create release
+      uses: actions/create-release@v1
+      id: create_release
+      with:
+        release_name: Bilimland autosolver v${{ env.CUR_VER }}
+        tag_name: v${{ env.CUR_VER }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GTOKEN || github.token }}
+
+    - name: Upload
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GTOKEN || github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./out-tm/main.js
+        asset_name: Bilimland autosolver v${{ steps.check.outputs.version }}.js
+        asset_content_type: text/javascript
+
+
