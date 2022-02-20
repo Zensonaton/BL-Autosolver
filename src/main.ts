@@ -428,7 +428,6 @@ function doAutocompletionWork(scheduleID: string) {
 
 			case ("bllp-module-select"):
 				var choice_s = getElementByXPath("/html/body/div/div[2]/div/div[4]/div/div[2]/div[1]/div/div/div/div/div/div/div/div[3]/div/div[1]/div[3]/div/div[2]/div")
-				console.error("WIP!")
 
 				// @ts-ignore
 				_moduleSelect(choice_s, parseInt(module_parsed_answers["parsedModuleAnswers"]) + 1)
