@@ -229,6 +229,8 @@ waitForElementToAppear(
 	false
 )
 
+var isNewElementsAdded = false
+
 function doAutocompletionWork(scheduleID: string) {
 	const moduleElement = document.getElementsByClassName("bllp-module")[0]
 
@@ -253,10 +255,38 @@ function doAutocompletionWork(scheduleID: string) {
 		return
 	}
 
+	const moduleID = document.getElementsByClassName("bllp-content")[0].getAttribute("data-con-id")?.substring(0, 36)
+
+	if (moduleTypeIsUseful && last_module_id != moduleID) {
+		// Добавляем кое-какие элементы на страницу.
+
+		var answers = document.createElement("a")
+		// @ts-ignore
+		answers.style = "font-size: 80%; color: blue; cursor: pointer;"
+		answers.innerText = "; ответы (если присутствуют),"
+		answers.title = "Если ответы НЕ открываются, то сначала воспользуйся ТГ ботом, и попробуй нажать сюда снова."
+		answers.href = `https://bilimlandbot.eu.pythonanywhere.com/f/?f=${scheduleID}_${getUserID()}.html`
+		answers.target = "_blank"
+
+		var lessonID = document.createElement("span")
+		// @ts-ignore
+		lessonID.style = "font-size: 80%; color: darkorange; cursor: pointer;"
+		lessonID.innerText = " скопировать ID вопроса"
+		lessonID.title = "Кнопка для копирования ID вопроса в буфер обмена для быстрого поиска вопроса на сайте с ответами через CTRL+F."
+		lessonID.onclick = (() => {
+			const copyElement = document.createElement("textarea"); (copyElement.value = moduleID!); copyElement.setAttribute("readonly", ""); (copyElement.style.position = "absolute");(copyElement.style.left = "-9999px");document.body.appendChild(copyElement);copyElement.select();document.execCommand("copy");document.body.removeChild(copyElement);
+			new Audio("https://bilimlandbot.eu.pythonanywhere.com/static/v1.mp3").play()
+		})
+
+		document.getElementsByClassName("bllp-title-text")[0].appendChild(answers)
+		document.getElementsByClassName("bllp-title-text")[0].appendChild(lessonID)
+	
+		if (moduleIsChecked) { last_module_id = moduleID! }
+	}
+
 	if (moduleTypeIsUseful && !moduleIsChecked) { // TODO: Не забыть добавить проверку.
 		// Мы нашли 'полезный' модуль, т.е., вопрос, на который нужно ответить.
 
-		const moduleID = document.getElementsByClassName("bllp-content")[0].getAttribute("data-con-id")?.substring(0, 36)
 		if (last_module_id == moduleID) {
 			// Такой же moduleID, игнорируем.
 
