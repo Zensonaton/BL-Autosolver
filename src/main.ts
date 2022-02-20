@@ -216,8 +216,6 @@ waitForElementToAppear(
 			})
 		}
 
-		// const element = document.getElementsByClassName("bllp-module")[0]
-		// console.log(element)
 		const moduleClasslist = element.classList
 		const moduleType = MODULE_TYPES.find(type => moduleClasslist.contains(type))
 		const moduleTypeIsUseless = USELESS_MODULE_TYPES.includes(moduleType!)
@@ -304,60 +302,14 @@ waitForElementToAppear(
 							})
 						}, i * 50);
 
-						// setTimeout(() => {
-						// 	// @ts-ignore
-						// 	const left_children_id = child_left.getAttribute("data-id")
-						// 	const right_letter = module_parsed_answers["parsedModuleAnswers"][parseInt(left_children_id) - 1]["right"]
-	
-						// 	// @ts-ignore
-						// 	child_left.click()
-	
-						// 	parent_right.childNodes.forEach(child_right => {
-						// 		// @ts-ignore
-						// 		const right_children_id = child_right.getAttribute("data-id")
-	
-						// 		if (right_children_id == right_letter) {
-						// 			// @ts-ignore
-						// 			child_right.click()
-						// 		}
-								
-						// 	})
-						// }, i * 150)
-
 						i += 1
 					}
-
-					// parent_left.childNodes.forEach(child_left => {
-					// 	setTimeout(() => {
-					// 		// console.debug(child_left)
-					// 		// @ts-ignore
-					// 		const left_children_id = child_left.getAttribute("data-id")
-					// 		const right_letter = module_parsed_answers["parsedModuleAnswers"][parseInt(left_children_id) - 1]["right"]
-	
-					// 		// @ts-ignore
-					// 		child_left.click()
-	
-					// 		parent_right.childNodes.forEach(child_right => {
-					// 			// @ts-ignore
-					// 			const right_children_id = child_right.getAttribute("data-id")
-	
-					// 			if (right_children_id == right_letter) {
-					// 				// @ts-ignore
-					// 				child_right.click()
-					// 			}
-								
-					// 		})
-					// 	}, i * 150)
-
-					// 	i += 1
-					// })
 	
 					break
 
 				case ("bllp-module-expressions"):
 					var parent = getElementByXPath("/html/body/div/div[2]/div/div[4]/div/div[2]/div[1]/div/div/div/div/div/div/div/div[3]/div/div[1]/div[3]/div/div")
 
-					// for (let i = 0; i < parent.childNodes.length; i++) {
 					var i = 0
 					parent.childNodes.forEach((child) => {
 						child.childNodes.forEach((child_2) => {
@@ -403,52 +355,6 @@ waitForElementToAppear(
 
 
 					break
-
-				case ("bllp-module-markWords"):
-					// var parent = getElementByXPath("/html/body/div/div[2]/div/div[4]/div/div[2]/div[1]/div/div/div/div/div/div/div/div[3]/div/div[1]/div[3]/div/div[2]/div")
-
-					// // Получаем список всех кликабельных слов.
-					// parent.childNodes.forEach((child) => {
-					// 	child.childNodes.forEach((child) => {
-					// 		child.childNodes.forEach((child) => {
-					// 			// @ts-ignore
-					// 			if (child.localName == "x-word") {
-					// 				// @ts-ignore
-					// 				const wordID = child.getAttribute("data-wid")
-
-					// 				console.debug(wordID)
-
-					// 				if (Object.keys(module_parsed_answers["parsedModuleAnswers"]).includes(wordID)) {
-					// 					// @ts-ignore
-					// 					child.click()
-					// 				}
-					// 			// @ts-ignore
-					// 			} else if (child.localName == "span") {
-					// 				child.childNodes.forEach((child) => {
-					// 					if (child.nodeName !== "#text") {
-					// 						// @ts-ignore
-					// 						var wordID = child.getAttribute("data-wid")
-
-					// 						wordID = wordID.replace(/(\d+)-(?:\d+):/gi, "$1:")
-
-					// 						console.debug(wordID)
-
-					// 						if (Object.keys(module_parsed_answers["parsedModuleAnswers"]).includes(wordID)) {
-					// 							// @ts-ignore
-					// 							child.click()
-
-					// 							console.log("click on " + wordID.toString())
-					// 						}
-					// 					}
-					// 				})
-					// 			}
-					// 		})
-					// 	})
-					// })
-
-
-					// break
-
 
 				default:
 					console.error(`Тип ${moduleType} не поддерживается!`)
