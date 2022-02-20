@@ -12,15 +12,15 @@ function getElementByXPath(XPath: string): HTMLElement {
 
 /**
  * Waits element to appear.
- * @param XPathSelector: string;
+ * @param elementSelector: string;
  * @param onElementMatch: function;
  * @param context?: HTMLElement;
  * @param stopAfterFindingAny?: boolean;
  * @param throttle?: number;
  */
 function waitForElementToAppear(
-		XPathSelector: string, 
-		onElementMatch?: (element: HTMLElement) => any, 
+		elementSelector: string, 
+		onElementMatch?: (element: any) => any, 
 		context = document.body, 
 		stopAfterFindingAny = false, 
 		throttle = 300
@@ -39,9 +39,9 @@ function waitForElementToAppear(
 		}
 		lastCheck = Date.now()
 
-		var XPathElement = getElementByXPath(XPathSelector)
-		if (XPathElement) {
-			if (onElementMatch) { onElementMatch(XPathElement) }
+		var element = document.getElementsByClassName(elementSelector)
+		if (element) {
+			if (onElementMatch) { onElementMatch(element[0]) }
 			if (stopAfterFindingAny) disconnect()
 		}
 	}
@@ -173,8 +173,8 @@ if (DEBUG) { console.clear() } // Не пойму почему настройк�
 console.log("Zensonaton'ский модуль для хитрожопой работы с билимлендом загружен, ура!")
 
 waitForElementToAppear(
-	"/html/body/div/div[2]/div/div[2]/div[2]/div[1]/span",
-	(() => {
+	"bllp-module",
+	((element) => {
 		const url = new URL(window.location.href)
 		const scheduleID = url.pathname.split("/")[4]
 
@@ -216,8 +216,8 @@ waitForElementToAppear(
 			})
 		}
 
-		const element = document.getElementsByClassName("bllp-module")[0]
-		console.log(element)
+		// const element = document.getElementsByClassName("bllp-module")[0]
+		// console.log(element)
 		const moduleClasslist = element.classList
 		const moduleType = MODULE_TYPES.find(type => moduleClasslist.contains(type))
 		const moduleTypeIsUseless = USELESS_MODULE_TYPES.includes(moduleType!)
@@ -252,7 +252,6 @@ waitForElementToAppear(
 			switch (moduleType) {
 				case ("bllp-module-choice"):
 					var parent = getElementByXPath(`/html/body/div/div[2]/div/div[4]/div/div[2]/div[1]/div/div/div/div/div/div/div/div[3]/div/div[1]/div[3]/div/div[${module_parsed_answers["isMultiple"] ? 3 : 2}]`)
-					console.debug(parent.childNodes)
 
 					parent.childNodes.forEach(child => {
 						// @ts-ignore
@@ -282,30 +281,76 @@ waitForElementToAppear(
 					var parent_right = getElementByXPath("/html/body/div/div[2]/div/div[4]/div/div[2]/div[1]/div/div/div/div/div/div/div/div[3]/div/div[1]/div[3]/div/div[3]/ul[2]")
 
 					var i = 0
-					parent_left.childNodes.forEach(child_left => {
+					for (const answer of module_parsed_answers["parsedModuleAnswers"]) {
 						setTimeout(() => {
-							// console.debug(child_left)
-							// @ts-ignore
-							const left_children_id = child_left.getAttribute("data-id")
-							const right_letter = module_parsed_answers["parsedModuleAnswers"][parseInt(left_children_id) - 1]["right"]
-	
-							// @ts-ignore
-							child_left.click()
-	
-							parent_right.childNodes.forEach(child_right => {
+							parent_left.childNodes.forEach(child_left => {
 								// @ts-ignore
-								const right_children_id = child_right.getAttribute("data-id")
-	
-								if (right_children_id == right_letter) {
+								const left_children_id = child_left.getAttribute("data-id")
+								if (left_children_id == answer["left"]) {
 									// @ts-ignore
-									child_right.click()
+									child_left.click()
+
+									parent_right.childNodes.forEach(child_right => {
+										// @ts-ignore
+										const right_children_id = child_right.getAttribute("data-id")
+
+										if (right_children_id == answer["right"]) {
+											// @ts-ignore
+											child_right.click()
+										}
+
+									})
 								}
-								
 							})
-						}, i * 150)
+						}, i * 50);
+
+						// setTimeout(() => {
+						// 	// @ts-ignore
+						// 	const left_children_id = child_left.getAttribute("data-id")
+						// 	const right_letter = module_parsed_answers["parsedModuleAnswers"][parseInt(left_children_id) - 1]["right"]
+	
+						// 	// @ts-ignore
+						// 	child_left.click()
+	
+						// 	parent_right.childNodes.forEach(child_right => {
+						// 		// @ts-ignore
+						// 		const right_children_id = child_right.getAttribute("data-id")
+	
+						// 		if (right_children_id == right_letter) {
+						// 			// @ts-ignore
+						// 			child_right.click()
+						// 		}
+								
+						// 	})
+						// }, i * 150)
 
 						i += 1
-					})
+					}
+
+					// parent_left.childNodes.forEach(child_left => {
+					// 	setTimeout(() => {
+					// 		// console.debug(child_left)
+					// 		// @ts-ignore
+					// 		const left_children_id = child_left.getAttribute("data-id")
+					// 		const right_letter = module_parsed_answers["parsedModuleAnswers"][parseInt(left_children_id) - 1]["right"]
+	
+					// 		// @ts-ignore
+					// 		child_left.click()
+	
+					// 		parent_right.childNodes.forEach(child_right => {
+					// 			// @ts-ignore
+					// 			const right_children_id = child_right.getAttribute("data-id")
+	
+					// 			if (right_children_id == right_letter) {
+					// 				// @ts-ignore
+					// 				child_right.click()
+					// 			}
+								
+					// 		})
+					// 	}, i * 150)
+
+					// 	i += 1
+					// })
 	
 					break
 
@@ -330,40 +375,15 @@ waitForElementToAppear(
 									} else if (className === "bllx-choice") {
 										const right_answer_id = Object.values(module_parsed_answers["parsedModuleAnswers"])[i]
 
-										// console.debug(right_answer_id, i)
-
 										// @ts-ignore
 										child_2.firstChild?.firstChild?.click()
 										// @ts-ignore
 										child_2.lastChild?.childNodes[parseInt(right_answer_id)].click()
-
-
-										// setTimeout(() => {
-										// 	console.debug(child_2.lastChild?.childNodes)
-
-										// 	// @ts-ignore
-										// 	child_2.lastChild?.childNodes[parseInt(right_answer_id)].click()
-										// }, 5)
 										
 										i += 1
 									} else {
 										console.error("Неизвестный тип: " + className)
 									}
-
-									// CHOICE
-									// const right_answer_id = Object.values(module_parsed_answers["parsedModuleAnswers"])[i]
-
-									// // @ts-ignore
-									// child_2.firstChild?.firstChild?.click()
-
-									// setTimeout(() => {
-									// 	console.debug(child_2.lastChild?.childNodes)
-
-									// 	// @ts-ignore
-									// 	child_2.lastChild?.childNodes[parseInt(right_answer_id)].click()
-									// }, 5)
-									
-									// i += 1
 								}
 							})
 						})
@@ -380,7 +400,6 @@ waitForElementToAppear(
 
 					// @ts-ignore
 					choice.lastChild?.childNodes[parseInt(module_parsed_answers["parsedModuleAnswers"]) + 1].click()
-
 
 
 					break
