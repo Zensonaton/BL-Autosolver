@@ -200,68 +200,73 @@ waitForElementToAppear(
 	"ol-week__tab", // <-- один из элементов, который появляется только после появления страницы с уроком.
 
 	(() => {
-		const url = new URL(window.location.href)
-		const scheduleID = url.pathname.split("/")[4]
-		const AUTHORIZATION_HEADER = { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+		try {
+			const url = new URL(window.location.href)
+			const scheduleID = url.pathname.split("/")[4]
+			const AUTHORIZATION_HEADER = { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+			
+			if (!scheduleID) {
+				// Открыта страница не с уроком, поэтому просто выходим.
+				console.debug(RUSSIAN_STRINGS.DebugNoLessonPage)
+	
+				return
+			}
+			
+	
+			// Проверяем, скачан ли урок или нет:
+			if (!(scheduleID in module_extended_info)) {
+				// Урок НЕ загружен. Делаем двойную работу, и качаем его снова :(
+				const extended_info_url = `https://onlinemektep.net/api/v2/os/schedule/lesson/${scheduleID}`
+	
+				console.debug(`${RUSSIAN_STRINGS.DebugLessonLoading}: ${extended_info_url}`)
+	
+				makeRequest( "GET", extended_info_url, AUTHORIZATION_HEADER ).then((resp: any) => {
+					const respObject = JSON.parse(resp).data
+					const lessonIntID = respObject.lessonId
+					module_extended_info[scheduleID] = respObject
+	
+					// Инфа о уроке получена, теперь мы можем скачать файл index.json.
+					// Однако, что бы быть уверенным в том, что ничего не сломается, мы сначала сделаем дополнительный запрос, без него доступа к файлу с ответами нет.
+	
+					console.debug(RUSSIAN_STRINGS.DebugGettingAccessToIndexJSON)
+	
+					makeRequest("POST", "https://onlinemektep.net/api/v2/os/lesson-access", AUTHORIZATION_HEADER, { lessonId: lessonIntID }).then((resp: any) => {
+						const lesson_answers_access_token = JSON.parse(resp).data.jwt
+						const index_json_url = "https://onlinemektep.net/upload/online_mektep/lesson/" + MD5(MD5("L_" + lessonIntID.toString())) + "/index.json"
+	
+						console.debug(RUSSIAN_STRINGS.DebugLessonIDString + lessonIntID + RUSSIAN_STRINGS.DebugLoadingIndexJSONByUrl + index_json_url)
 		
-		if (!scheduleID) {
-			// Открыта страница не с уроком, поэтому просто выходим.
-			console.debug(RUSSIAN_STRINGS.DebugNoLessonPage)
-
-			return
-		}
+						makeRequest( "GET", index_json_url, {"secure-token": lesson_answers_access_token} ).then((resp: any) => {
+							// index.json загружен!
 		
-
-		// Проверяем, скачан ли урок или нет:
-		if (!(scheduleID in module_extended_info)) {
-			// Урок НЕ загружен. Делаем двойную работу, и качаем его снова :(
-			const extended_info_url = `https://onlinemektep.net/api/v2/os/schedule/lesson/${scheduleID}`
-
-			console.debug(`${RUSSIAN_STRINGS.DebugLessonLoading}: ${extended_info_url}`)
-
-			makeRequest( "GET", extended_info_url, AUTHORIZATION_HEADER ).then((resp: any) => {
-				const respObject = JSON.parse(resp).data
-				const lessonIntID = respObject.lessonId
-				module_extended_info[scheduleID] = respObject
-
-				// Инфа о уроке получена, теперь мы можем скачать файл index.json.
-				// Однако, что бы быть уверенным в том, что ничего не сломается, мы сначала сделаем дополнительный запрос, без него доступа к файлу с ответами нет.
-
-				console.debug(RUSSIAN_STRINGS.DebugGettingAccessToIndexJSON)
-
-				makeRequest("POST", "https://onlinemektep.net/api/v2/os/lesson-access", AUTHORIZATION_HEADER, { lessonId: lessonIntID }).then((resp: any) => {
-					const lesson_answers_access_token = JSON.parse(resp).data.jwt
-					const index_json_url = "https://onlinemektep.net/upload/online_mektep/lesson/" + MD5(MD5("L_" + lessonIntID.toString())) + "/index.json"
-
-					console.debug(RUSSIAN_STRINGS.DebugLessonIDString + lessonIntID + RUSSIAN_STRINGS.DebugLoadingIndexJSONByUrl + index_json_url)
-	
-					makeRequest( "GET", index_json_url, {"secure-token": lesson_answers_access_token} ).then((resp: any) => {
-						// index.json загружен!
-	
-						module_answers[scheduleID] = resp
-	
-						console.debug(RUSSIAN_STRINGS.DebugIndexJSONLoadedSuccessfully)
-	
-						makeRequest( "POST", "https://bilimlandbot.eu.pythonanywhere.com/api/autocompletion/decode", undefined, {"File": resp, "UID": "not-used"} ).then((resp: any) => {
-							// Parsed-результат готов, ура, ликуем!
-	
-							module_answers_decoded[scheduleID] = JSON.parse(resp)
-							console.debug(RUSSIAN_STRINGS.DebugDecodeComplete)
-	
-							// Урок загружен, можно продолжать.
-							doAutocompletionWork(scheduleID)
-						}).catch(() => {
-							console.error(RUSSIAN_STRINGS.DecodeError)
-							alert(RUSSIAN_STRINGS.DecodeErrorAlert)
+							module_answers[scheduleID] = resp
+		
+							console.debug(RUSSIAN_STRINGS.DebugIndexJSONLoadedSuccessfully)
+		
+							makeRequest( "POST", "https://bilimlandbot.eu.pythonanywhere.com/api/autocompletion/decode", undefined, {"File": resp, "UID": "not-used"} ).then((resp: any) => {
+								// Parsed-результат готов, ура, ликуем!
+		
+								module_answers_decoded[scheduleID] = JSON.parse(resp)
+								console.debug(RUSSIAN_STRINGS.DebugDecodeComplete)
+		
+								// Урок загружен, можно продолжать.
+								doAutocompletionWork(scheduleID)
+							}).catch(() => {
+								console.error(RUSSIAN_STRINGS.DecodeError)
+								alert(RUSSIAN_STRINGS.DecodeErrorAlert)
+							})
 						})
 					})
 				})
-			})
-		} else {
-			// Урок загружен, можно продолжать.
-			doAutocompletionWork(scheduleID)
+			} else {
+				// Урок загружен, можно продолжать.
+				doAutocompletionWork(scheduleID)
+			}	
+		} catch (error) {
+			console.error(`Bilimland Script error: ${error}`)
 		}
 	}),
+	
 	document.body,
 	false
 )
