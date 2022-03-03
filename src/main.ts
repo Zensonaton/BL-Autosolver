@@ -144,6 +144,26 @@ const MODULE_TYPES = [
 	"bllp-module-markWords",
 ]
 
+const RUSSIAN_STRINGS = {
+	ScriptLoaded: "Zensonaton'ский модуль для хитрожопой работы с билимлендом загружен, ура!",
+
+	AnswersInnerText: "; ответы (если присутствуют),",
+	AnswersTitleText: "Если ответы НЕ открываются, то сначала воспользуйся ТГ ботом, и попробуй нажать сюда снова.",
+	ButtonLessonIDString: " скопировать ID вопроса",
+	ButtonLessonIDTitle: "Кнопка для копирования ID вопроса в буфер обмена для быстрого поиска вопроса на сайте с ответами через CTRL+F.",
+
+	DecodeError: "Ошибка при дешифровке.",
+	DecodeErrorAlert: "[скрипт билимленда] Я не смог дешифровать данный урок, поэтому я НЕ буду работать на этой странице.",
+
+	DebugLessonLoading: "Загружаю урок. URL с расширенной инфой",
+	DebugGettingAccessToIndexJSON: "Получаю доступ к index.json...",
+	DebugNoLessonPage: "Страница без урока.",
+	DebugDecodeComplete: "Успех, декодирование завершено!",
+	DebugLessonIDString: "ID урока: ",
+	DebugLoadingIndexJSONByUrl: ". Загружаю index.json по ссылке ",
+	DebugIndexJSONLoadedSuccessfully: "index.json загружен, декодирую его..."
+}
+
 const USELESS_MODULE_TYPES = [
 	"bllp-module-simple",
 	"bllp-module-result",
@@ -157,7 +177,7 @@ var last_module_id: string
 
 if (DEBUG) { console.clear() } // Не пойму почему настройка для очистки консоли не работала, поэтому будем так извращаться :D
 
-console.log("Zensonaton'ский модуль для хитрожопой работы с билимлендом загружен, ура!")
+console.log(RUSSIAN_STRINGS.ScriptLoaded)
 
 waitForElementToAppear(
 	"ol-week__tab", // <-- один из элементов, который появляется только после появления страницы с уроком.
@@ -169,7 +189,7 @@ waitForElementToAppear(
 		
 		if (!scheduleID) {
 			// Открыта страница не с уроком, поэтому просто выходим.
-			console.debug("Страница без урока.")
+			console.debug(RUSSIAN_STRINGS.DebugNoLessonPage)
 
 			return
 		}
@@ -180,7 +200,7 @@ waitForElementToAppear(
 			// Урок НЕ загружен. Делаем двойную работу, и качаем его снова :(
 			const extended_info_url = `https://onlinemektep.net/api/v2/os/schedule/lesson/${scheduleID}`
 
-			console.debug(`Загружаю урок. URL с расширенной инфой: ${extended_info_url}`)
+			console.debug(`${RUSSIAN_STRINGS.DebugLessonLoading}: ${extended_info_url}`)
 
 			makeRequest( "GET", extended_info_url, AUTHORIZATION_HEADER ).then((resp: any) => {
 				const respObject = JSON.parse(resp).data
@@ -190,32 +210,32 @@ waitForElementToAppear(
 				// Инфа о уроке получена, теперь мы можем скачать файл index.json.
 				// Однако, что бы быть уверенным в том, что ничего не сломается, мы сначала сделаем дополнительный запрос, без него доступа к файлу с ответами нет.
 
-				console.debug("Получаю доступ к index.json...")
+				console.debug(RUSSIAN_STRINGS.DebugGettingAccessToIndexJSON)
 
 				makeRequest("POST", "https://onlinemektep.net/api/v2/os/lesson-access", AUTHORIZATION_HEADER, { lessonId: lessonIntID }).then((resp: any) => {
 					const lesson_answers_access_token = JSON.parse(resp).data.jwt
 					const index_json_url = "https://onlinemektep.net/upload/online_mektep/lesson/" + MD5(MD5("L_" + lessonIntID.toString())) + "/index.json"
 
-					console.debug("ID урока: " + lessonIntID + ". Загружаю index.json по ссылке " + index_json_url)
+					console.debug(RUSSIAN_STRINGS.DebugLessonIDString + lessonIntID + RUSSIAN_STRINGS.DebugLoadingIndexJSONByUrl + index_json_url)
 	
 					makeRequest( "GET", index_json_url, {"secure-token": lesson_answers_access_token} ).then((resp: any) => {
 						// index.json загружен!
 	
 						module_answers[scheduleID] = resp
 	
-						console.debug("index.json загружен, декодирую его...")
+						console.debug(RUSSIAN_STRINGS.DebugIndexJSONLoadedSuccessfully)
 	
 						makeRequest( "POST", "https://bilimlandbot.eu.pythonanywhere.com/api/autocompletion/decode", undefined, {"File": resp, "UID": "not-used"} ).then((resp: any) => {
 							// Parsed-результат готов, ура, ликуем!
 	
 							module_answers_decoded[scheduleID] = JSON.parse(resp)
-							console.debug("Успех, декодирование завершено!")
+							console.debug(RUSSIAN_STRINGS.DebugDecodeComplete)
 	
 							// Урок загружен, можно продолжать.
 							doAutocompletionWork(scheduleID)
 						}).catch(() => {
-							console.error("Ошибка при дешифровке.")
-							alert("[скрипт билимленда] Я не смог дешифровать данный урок, поэтому я НЕ буду работать на этой странице.")
+							console.error(RUSSIAN_STRINGS.DecodeError)
+							alert(RUSSIAN_STRINGS.DecodeErrorAlert)
 						})
 					})
 				})
@@ -246,7 +266,7 @@ function doAutocompletionWork(scheduleID: string) {
 	const moduleTypeIsUseful = !moduleTypeIsUseless
 	const moduleIsChecked = moduleClasslist.contains("bllp-module-checked")
 
-	console.debug(`Открыт модуль ${moduleType}, полезен ли он: ${moduleTypeIsUseful}, чекнутый: ${moduleIsChecked}`)
+	console.debug(`Module open: ${moduleType}, is it useful for us: ${moduleTypeIsUseful}, is it already completed: ${moduleIsChecked}`)
 	if (moduleType === undefined) {
 		// Что-то пошло не так.
 
@@ -263,16 +283,16 @@ function doAutocompletionWork(scheduleID: string) {
 		var answers = document.createElement("a")
 		// @ts-ignore
 		answers.style = "font-size: 80%; color: blue; cursor: pointer;"
-		answers.innerText = "; ответы (если присутствуют),"
-		answers.title = "Если ответы НЕ открываются, то сначала воспользуйся ТГ ботом, и попробуй нажать сюда снова."
+		answers.innerText = RUSSIAN_STRINGS.AnswersInnerText
+		answers.title = RUSSIAN_STRINGS.AnswersTitleText
 		answers.href = `https://bilimlandbot.eu.pythonanywhere.com/f/?f=${scheduleID}_${getUserID()}.html`
 		answers.target = "_blank"
 
 		var lessonID = document.createElement("span")
 		// @ts-ignore
 		lessonID.style = "font-size: 80%; color: darkorange; cursor: pointer;"
-		lessonID.innerText = " скопировать ID вопроса"
-		lessonID.title = "Кнопка для копирования ID вопроса в буфер обмена для быстрого поиска вопроса на сайте с ответами через CTRL+F."
+		lessonID.innerText = RUSSIAN_STRINGS.ButtonLessonIDString
+		lessonID.title = RUSSIAN_STRINGS.ButtonLessonIDTitle
 		lessonID.onclick = (() => {
 			const copyElement = document.createElement("textarea"); (copyElement.value = moduleID!); copyElement.setAttribute("readonly", ""); (copyElement.style.position = "absolute");(copyElement.style.left = "-9999px");document.body.appendChild(copyElement);copyElement.select();document.execCommand("copy");document.body.removeChild(copyElement);
 			new Audio("https://bilimlandbot.eu.pythonanywhere.com/static/v1.mp3").play()
@@ -296,7 +316,7 @@ function doAutocompletionWork(scheduleID: string) {
 		// @ts-ignore
 		const module_parsed_answers = module_answers_decoded[scheduleID].data.modules[moduleID!]
 
-		console.debug(`Работаю над модулем с ID ${moduleID}, типа ${moduleType}`)
+		console.debug(`Working with module ID ${moduleID} type ${moduleType}`)
 		console.debug(module_parsed_answers)
 
 		switch (moduleType) {
@@ -419,40 +439,9 @@ function doAutocompletionWork(scheduleID: string) {
 
 						_moduleSelect(child, Object.values(module_parsed_answers["parsedModuleAnswers"])[answerIndex] as number)
 					} else {
-						console.error("Неизвестный expression-тип.", child)
+						console.error("Unknown expression type.", child)
 					}
 				})
-
-				// var j = 0
-				// parent_e.childNodes.forEach((child) => {
-				// 	child.childNodes.forEach((child_2) => {
-				// 		// @ts-ignore
-				// 		const classList = child_2.classList
-
-				// 		classList.forEach((className: string) => {
-				// 			if (className.startsWith("bllx-")) {
-				// 				console.debug(className)
-				// 				if (className === "bllx-input-wrapper") {
-				// 					// @ts-ignore
-				// 					const element = findElementWithDataRole(parent_e, "input-expression")
-				// 					element.value = module_parsed_answers["parsedModuleAnswers"][element.getAttribute("data-id")]
-				// 					element.dispatchEvent(new Event("change"))
-				// 				} else if (className === "bllx-choice") {
-				// 					const right_answer_id = Object.values(module_parsed_answers["parsedModuleAnswers"])[j]
-
-				// 					// @ts-ignore
-				// 					child_2.firstChild?.firstChild?.click()
-				// 					// @ts-ignore
-				// 					child_2.lastChild?.childNodes[parseInt(right_answer_id)].click()
-									
-				// 					j += 1
-				// 				} else {
-				// 					console.error("Неизвестный тип: " + className)
-				// 				}
-				// 			}
-				// 		})
-				// 	})
-				// })
 
 				break
 
@@ -465,7 +454,7 @@ function doAutocompletionWork(scheduleID: string) {
 				break
 
 			default:
-				console.error(`Тип ${moduleType} не поддерживается!`)
+				console.error(`Module type ${moduleType} is not yet supported!`)
 
 				break
 		}
