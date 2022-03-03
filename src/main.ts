@@ -178,7 +178,30 @@ const RUSSIAN_STRINGS = {
 	// . Загружаю index.json по ссылке 
 	DebugLoadingIndexJSONByUrl: ". \u0417\u0430\u0433\u0440\u0443\u0436\u0430\u044E index.json \u043F\u043E \u0441\u0441\u044B\u043B\u043A\u0435 ",
 	// index.json загружен, декодирую его...
-	DebugIndexJSONLoadedSuccessfully: "index.json \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D, \u0434\u0435\u043A\u043E\u0434\u0438\u0440\u0443\u044E \u0435\u0433\u043E..."
+	DebugIndexJSONLoadedSuccessfully: "index.json \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D, \u0434\u0435\u043A\u043E\u0434\u0438\u0440\u0443\u044E \u0435\u0433\u043E...",
+
+	// Скрипт: ожидание урока
+	StateWaiting: "\u0421\u043a\u0440\u0438\u043f\u0442\u003a\u0020\u043e\u0436\u0438\u0434\u0430\u043d\u0438\u0435\u0020\u0443\u0440\u043e\u043a\u0430",
+	// Скрипт: Страница не с уроком
+	StateNoLesson: "\u0421\u043a\u0440\u0438\u043f\u0442\u003a\u0020\u0421\u0442\u0440\u0430\u043d\u0438\u0446\u0430\u0020\u043d\u0435\u0020\u0441\u0020\u0443\u0440\u043e\u043a\u043e\u043c",
+	// Скрипт: Гружу инфу о уроке
+	StateDownloadingExtInfo: "\u0421\u043a\u0440\u0438\u043f\u0442\u003a\u0020\u0413\u0440\u0443\u0436\u0443\u0020\u0438\u043d\u0444\u0443\u0020\u043e\u0020\u0443\u0440\u043e\u043a\u0435",
+	// Скрипт: Получаю доступ к ответам
+	StateGettingAccess: "\u0421\u043a\u0440\u0438\u043f\u0442\u003a\u0020\u0413\u0440\u0443\u0436\u0443\u0020\u0438\u043d\u0444\u0443\u0020\u043e\u0020\u0443\u0440\u043e\u043a\u0435",
+	// Скрипт: Ответы получены, декодирую
+	StateDecodingAnswers: "\u0421\u043a\u0440\u0438\u043f\u0442\u003a\u0020\u041e\u0442\u0432\u0435\u0442\u044b\u0020\u043f\u043e\u043b\u0443\u0447\u0435\u043d\u044b\u002c\u0020\u0434\u0435\u043a\u043e\u0434\u0438\u0440\u0443\u044e",
+	// Скрипт: Урок готов, жду заданий
+	StateFullyLoaded: "\u0421\u043a\u0440\u0438\u043f\u0442\u003a\u0020\u0423\u0440\u043e\u043a\u0020\u0433\u043e\u0442\u043e\u0432\u002c\u0020\u0436\u0434\u0443\u0020\u0437\u0430\u0434\u0430\u043d\u0438\u0439",
+	// Скрипт: ОШИБКА!
+	StateError: "\u0421\u043a\u0440\u0438\u043f\u0442\u003a\u0020\u041e\u0428\u0418\u0411\u041a\u0410\u0021",
+	// Скрипт: ОК
+	StateOK: "\u0421\u043a\u0440\u0438\u043f\u0442\u003a\u0020\u041e\u041a",
+	// Скрипт: Неизвестный ex-тип!
+	StateUnknownExType: "\u0421\u043a\u0440\u0438\u043f\u0442\u003a\u0020\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439\u0020\u0065\u0078\u002d\u0442\u0438\u043f\u0021",
+	// Скрипт: Неизвестный тип задания!
+	StateUnknownLessonType: "\u0421\u043a\u0440\u0438\u043f\u0442\u003a\u0020\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439\u0020\u0442\u0438\u043f\u0020\u0437\u0430\u0434\u0430\u043d\u0438\u044f\u0021",
+
+
 }
 
 const USELESS_MODULE_TYPES = [
@@ -196,6 +219,14 @@ if (DEBUG) { console.clear() } // Не пойму почему настройк�
 
 console.log(RUSSIAN_STRINGS.ScriptLoaded)
 
+// Добавляем наш текст состояния скрипта.
+const scriptState = document.createElement("span")
+// @ts-ignore
+scriptState.style = "position: fixed; bottom: 0; right: 0; margin: 15px;"
+scriptState.innerText = RUSSIAN_STRINGS.StateWaiting
+
+document.body.appendChild(scriptState)
+
 waitForElementToAppear(
 	"ol-week__tab", // <-- один из элементов, который появляется только после появления страницы с уроком.
 
@@ -208,6 +239,7 @@ waitForElementToAppear(
 			if (!scheduleID) {
 				// Открыта страница не с уроком, поэтому просто выходим.
 				console.debug(RUSSIAN_STRINGS.DebugNoLessonPage)
+				scriptState.innerText = RUSSIAN_STRINGS.StateNoLesson
 	
 				return
 			}
@@ -219,6 +251,7 @@ waitForElementToAppear(
 				const extended_info_url = `https://onlinemektep.net/api/v2/os/schedule/lesson/${scheduleID}`
 	
 				console.debug(`${RUSSIAN_STRINGS.DebugLessonLoading}: ${extended_info_url}`)
+				scriptState.innerText = RUSSIAN_STRINGS.StateDownloadingExtInfo
 	
 				makeRequest( "GET", extended_info_url, AUTHORIZATION_HEADER ).then((resp: any) => {
 					const respObject = JSON.parse(resp).data
@@ -229,6 +262,7 @@ waitForElementToAppear(
 					// Однако, что бы быть уверенным в том, что ничего не сломается, мы сначала сделаем дополнительный запрос, без него доступа к файлу с ответами нет.
 	
 					console.debug(RUSSIAN_STRINGS.DebugGettingAccessToIndexJSON)
+					scriptState.innerText = RUSSIAN_STRINGS.StateGettingAccess
 	
 					makeRequest("POST", "https://onlinemektep.net/api/v2/os/lesson-access", AUTHORIZATION_HEADER, { lessonId: lessonIntID }).then((resp: any) => {
 						const lesson_answers_access_token = JSON.parse(resp).data.jwt
@@ -242,12 +276,14 @@ waitForElementToAppear(
 							module_answers[scheduleID] = resp
 		
 							console.debug(RUSSIAN_STRINGS.DebugIndexJSONLoadedSuccessfully)
+							scriptState.innerText = RUSSIAN_STRINGS.StateDecodingAnswers
 		
 							makeRequest( "POST", "https://bilimlandbot.eu.pythonanywhere.com/api/autocompletion/decode", undefined, {"File": resp, "UID": "not-used"} ).then((resp: any) => {
 								// Parsed-результат готов, ура, ликуем!
 		
 								module_answers_decoded[scheduleID] = JSON.parse(resp)
 								console.debug(RUSSIAN_STRINGS.DebugDecodeComplete)
+								scriptState.innerText = RUSSIAN_STRINGS.StateFullyLoaded
 		
 								// Урок загружен, можно продолжать.
 								doAutocompletionWork(scheduleID)
@@ -264,9 +300,10 @@ waitForElementToAppear(
 			}	
 		} catch (error) {
 			console.error(`Bilimland Script error: ${error}`)
+			scriptState.innerText = RUSSIAN_STRINGS.StateError
 		}
 	}),
-	
+
 	document.body,
 	false
 )
@@ -278,6 +315,7 @@ function doAutocompletionWork(scheduleID: string) {
 
 	if (!moduleElement) {
 		// Урок ещё не загрузился, ждём...
+		scriptState.innerText = "Скрипт: Урок ещё не загрузился"
 
 		return
 	}
@@ -294,6 +332,7 @@ function doAutocompletionWork(scheduleID: string) {
 
 		console.error("moduleType is undefined!")
 		console.debug(moduleClasslist)
+		scriptState.innerText = RUSSIAN_STRINGS.StateError
 		return
 	}
 
@@ -325,6 +364,8 @@ function doAutocompletionWork(scheduleID: string) {
 	
 		if (moduleIsChecked) { last_module_id = moduleID! }
 	}
+
+	var isSuccess = true
 
 	if (moduleTypeIsUseful && !moduleIsChecked) { // TODO: Не забыть добавить проверку.
 		// Мы нашли 'полезный' модуль, т.е., вопрос, на который нужно ответить.
@@ -462,6 +503,8 @@ function doAutocompletionWork(scheduleID: string) {
 						_moduleSelect(child, Object.values(module_parsed_answers["parsedModuleAnswers"])[answerIndex] as number)
 					} else {
 						console.error("Unknown expression type.", child)
+						scriptState.innerText = RUSSIAN_STRINGS.StateUnknownExType
+						isSuccess = false
 					}
 				})
 
@@ -477,9 +520,17 @@ function doAutocompletionWork(scheduleID: string) {
 
 			default:
 				console.error(`Module type ${moduleType} is not yet supported!`)
+				scriptState.innerText = RUSSIAN_STRINGS.StateUnknownLessonType
+				isSuccess = false
 
 				break
+
+		
 		}
+	}
+
+	if (!moduleIsChecked && isSuccess) {
+		scriptState.innerText = RUSSIAN_STRINGS.StateOK
 	}
 }
 
